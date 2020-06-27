@@ -23,6 +23,7 @@ import qualified Data.Text                        as T
 import qualified Data.Time                        as Time
 import qualified Database.PostgreSQL.Simple       as PGS
 import qualified Database.PostgreSQL.Simple.Range as R
+import qualified Database.Postgres.Temp
 import           GHC.Int                          (Int64)
 import           Opaleye                          (Field, Nullable, Select,
                                                    SelectArr, (.==), (.>))
@@ -1148,11 +1149,15 @@ main = do
 
   let connectString = connectStringEnvVar <|> connectStringDotEnv
 
-  conn <- maybe
-    (fail ("Set " ++ envVarName ++ " environment variable\n"
-           ++ "For example " ++ envVarName ++ "='user=tom dbname=opaleye_test "
-           ++ "host=localhost port=25433 password=tom'"))
-    (PGS.connectPostgreSQL . String.fromString)
+  (conn, db) <- maybe
+    (do Right db <- Database.Postgres.Temp.start
+        let connectString_ = Database.Postgres.Temp.toConnectionString db
+        conn <- PGS.connectPostgreSQL connectString_
+        pure (conn, db))
+    (fail ("Opaleye tests no use a manually configured"
+          ++ " database connection string.  If you have a POSTGRES_CONNSTRING"
+          ++ " environment variable or a .env file then please remove them"
+          ++ " and run the tests again."))
     connectString
 
   dropAndCreateDB conn
@@ -1272,3 +1277,5 @@ main = do
             O.sqlDay (read "2018-01-01") (read "2018-01-12")
       describe "literals" $ do
         testLiterals
+
+  Database.Postgres.Temp.stop db
