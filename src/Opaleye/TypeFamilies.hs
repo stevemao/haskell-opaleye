@@ -15,7 +15,6 @@ module Opaleye.TypeFamilies
   , TF.Opt
   , TF.Req
   , TF.Nulls
-  , TF.TableField
   ) where
 
 import Opaleye.Internal.TypeFamilies as TF

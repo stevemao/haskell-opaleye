@@ -61,7 +61,6 @@ module Opaleye.Operators
   , inSelect
   -- * JSON operators
   , SqlIsJson
-  , PGIsJson
   , SqlJsonIndex
   , PGJsonIndex
   , (.->)
@@ -101,9 +100,6 @@ module Opaleye.Operators
   , dateOfTimestamp
   , now
   -- * Deprecated
-  , exists
-  , notExists
-  , inQuery
   , keepWhen
   )
 
@@ -309,9 +305,6 @@ inSelect c q = E.exists (keepWhen (c .===) A.<<< q)
 -- Warning: making additional instances of this class can lead to broken code!
 class SqlIsJson a
 
-{-# DEPRECATED PGIsJson "Use SqlIsJson instead" #-}
-type PGIsJson = SqlIsJson
-
 instance SqlIsJson T.SqlJson
 instance SqlIsJson T.SqlJsonb
 
@@ -469,32 +462,7 @@ timestamptzAtTimeZone = C.binOp HPQ.OpAtTimeZone
 dateOfTimestamp :: F.Field T.SqlTimestamp -> F.Field T.SqlDate
 dateOfTimestamp (Column e) = Column (HPQ.FunExpr "date" [e])
 
-{-# DEPRECATED exists "Identical to 'restrictExists'.  Will be removed in version 0.8." #-}
-exists :: QueryArr a b -> QueryArr a ()
-exists = restrictExists
-
-{-# DEPRECATED notExists "Identical to 'restrictNotExists'.  Will be removed in version 0.8." #-}
-notExists :: QueryArr a b -> QueryArr a ()
-notExists = restrictNotExists
-
-{-# DEPRECATED inQuery "Identical to 'inSelect'.  Will be removed in version 0.8." #-}
-inQuery :: D.Default O.EqPP fields fields
-        => fields -> Query fields -> S.Select (F.Field T.SqlBool)
-inQuery = inSelect
-
-{-| This function is probably not useful and is likely to be deprecated
-  in the future.
-
-Keep only the rows of a query satisfying a given condition, using
-an SQL @WHERE@ clause.
-
-You would typically use 'keepWhen' if you want to write
-your query using a "point free" style.  If you want to use 'A.Arrow'
-notation then 'restrict' will suit you better.
-
-This is the 'S.SelectArr' equivalent of 'Prelude.filter' from the
-'Prelude'.
--}
+{-# DEPRECATED keepWhen "Use 'where_' or 'restrict' instead.  Will be removed in version 0.9." #-}
 keepWhen :: (a -> F.Field T.SqlBool) -> S.SelectArr a a
 keepWhen p = proc a -> do
   restrict  -< p a

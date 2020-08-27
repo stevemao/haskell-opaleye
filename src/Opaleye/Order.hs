@@ -21,7 +21,6 @@ module Opaleye.Order ( -- * Order by
                      -- * Exact ordering
                      , O.exact
                      -- * Other
-                     , PGOrd
                      , SqlOrd
                      ) where
 
@@ -144,9 +143,6 @@ distinctOnBy proj ord q = Q.productQueryArr (O.distinctOnBy D.def proj ord . Q.r
 
 -- | Typeclass for Postgres types which support ordering operations.
 class SqlOrd a where
-
-{-# DEPRECATED PGOrd "Use SqlOrd instead" #-}
-type PGOrd = SqlOrd
 
 instance SqlOrd T.SqlBool
 instance SqlOrd T.SqlDate

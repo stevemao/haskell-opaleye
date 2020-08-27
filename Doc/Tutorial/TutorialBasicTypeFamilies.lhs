@@ -21,10 +21,9 @@
 >                          showSql, Unpackspec,
 >                          SqlInt4, SqlInt8, SqlText, SqlDate, SqlFloat8)
 >
-> import qualified Opaleye              as O
-> import qualified Opaleye.Map          as M
+> import qualified Opaleye.Join         as OJ
 > import           Opaleye.TypeFamilies (O, H, NN, Req, Nulls, W,
->                                        TableRecordField, IMap, F,
+>                                        TableRecordField,
 >                                        (:<$>), (:<*>))
 >
 > import qualified Data.Profunctor         as P
@@ -152,8 +151,6 @@ Please volunteer to do that if you can.
 >           -> p (Birthday a) (Birthday b)
 > pBirthday b = Birthday PP.***$ P.lmap bdName (bdName b)
 >                        PP.**** P.lmap bdDay  (bdDay b)
->
-> type instance M.Map g (Birthday (F f)) = Birthday (F (IMap g f))
 
 Then we can use 'table' to make a table on our record type in exactly
 the same way as before.
@@ -223,8 +220,6 @@ one's implemented the Template Haskell or generics to do that yet.
 >                    PP.**** P.lmap location (location w)
 >                    PP.**** P.lmap quantity (quantity w)
 >                    PP.**** P.lmap radius   (radius w)
->
-> type instance M.Map g (Widget (F f)) = Widget (F (IMap g f))
 
 For the purposes of this example the style, color and location will be
 strings, but in practice they might have been a different data type.
@@ -350,13 +345,11 @@ Idealized SQL:
 Types of joins are inferrable in new versions of Opaleye.  Here is a
 (rather silly) example.
 
-> typeInferred =
->     O.fullJoinInferrable (O.fullJoinInferrable
->                     birthdaySelect
->                     (selectTable widgetTable)
->                     (const (O.sqlBool True)))
->                birthdaySelect
->                (const (O.sqlBool True))
+> typeInferred = do
+>     bd  <- birthdaySelect
+>     w   <- OJ.optional (selectTable widgetTable)
+>     bd' <- OJ.optional birthdaySelect
+>     pure (bd, w, bd')
 
 Running queries on Postgres
 ===========================
